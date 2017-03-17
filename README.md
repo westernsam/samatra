@@ -1,4 +1,4 @@
-Samatra
+Samatra [![Build Status](https://travis-ci.org/springernature/samatra.svg?branch=master)](https://travis-ci.org/springernature/samatra)
 =======
 
 ## Decription
