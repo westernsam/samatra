@@ -1,6 +1,6 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
-import java.io.{ByteArrayOutputStream, IOException, OutputStreamWriter, PrintWriter, UnsupportedEncodingException}
+import java.io._
 import java.security.MessageDigest
 import java.text.MessageFormat
 import java.time.ZoneOffset
@@ -10,8 +10,8 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse, HttpServletR
 import javax.servlet.{ServletOutputStream, WriteListener}
 import javax.xml.bind.DatatypeConverter
 
-import com.springer.link.samatra.routing.Routings.HttpResp
-import com.springer.link.samatra.routing.StandardResponses.WithHeaders
+import com.springer.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.StandardResponses.WithHeaders
 
 object CacheStrategies {
 

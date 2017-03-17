@@ -1,10 +1,10 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
 import java.io.{InputStream, OutputStream}
 import java.nio.file.{Files, Path}
 import javax.servlet.http.{Cookie, HttpServletRequest, HttpServletResponse}
 
-import com.springer.link.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.Routings.HttpResp
 
 import scala.language.implicitConversions
 

@@ -3,12 +3,14 @@ package com.springer.link.samatra.routing
 import java.nio.file.Paths
 import java.util
 
-import com.springer.link.samatra.routing.CacheStrategies._
-import com.springer.link.samatra.routing.FutureResponses.Implicits.fromFuture
-import com.springer.link.samatra.routing.FutureResponses._
-import com.springer.link.samatra.routing.Routings._
-import com.springer.link.samatra.routing.StandardResponses.Implicits._
-import com.springer.link.samatra.routing.StandardResponses._
+import com.springer.samatra.routing.CacheStrategies._
+import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
+import com.springer.samatra.routing.FutureResponses._
+import com.springer.samatra.routing.Routings._
+import com.springer.samatra.routing.CacheStrategies
+import com.springer.samatra.routing.Routings.{Controller, HeadersOnly, HttpResp, Routes}
+import com.springer.samatra.routing.StandardResponses.Implicits._
+import com.springer.samatra.routing.StandardResponses._
 import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig, Response}
 import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}

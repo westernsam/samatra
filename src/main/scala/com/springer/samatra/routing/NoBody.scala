@@ -1,4 +1,4 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
 import java.io.{IOException, OutputStreamWriter, PrintWriter, UnsupportedEncodingException}
 import java.text.MessageFormat
@@ -6,16 +6,14 @@ import java.util.ResourceBundle
 import javax.servlet.http.{HttpServletResponse, _}
 import javax.servlet.{ServletOutputStream, WriteListener}
 
-import com.springer.link.samatra.routing.Routings._
+import com.springer.samatra.routing.Routings.HttpResp
 
 case class NoBody(body: (Request) => HttpResp) extends (Request => HttpResp) {
   override def apply(req: Request): HttpResp = {
     val underlyingBody: HttpResp = body(req)
 
-    new HttpResp {
-      override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-        underlyingBody.process(req, new NoBodyResponse(resp))
-      }
+    (req: HttpServletRequest, resp: HttpServletResponse) => {
+      underlyingBody.process(req, new NoBodyResponse(resp))
     }
   }
 

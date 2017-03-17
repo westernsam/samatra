@@ -1,7 +1,8 @@
 package com.springer.link.samatra.routing
 
-import com.springer.link.samatra.routing.Routings.{GET, PathParamsRoute, RegexRoute}
-import com.springer.link.samatra.routing.StandardResponses.Implicits.fromString
+import com.springer.samatra.routing.Request
+import com.springer.samatra.routing.Routings.{GET, PathParamsRoute, RegexRoute}
+import com.springer.samatra.routing.StandardResponses.Implicits.fromString
 import org.scalatest.FunSpec
 import org.scalatest.Matchers._
 
@@ -41,9 +42,9 @@ class RoutingsTests extends FunSpec {
     }
   }
 
-  def pathPattern(pattern: String): PathParamsRoute[String] = new PathParamsRoute(GET, pattern, { _ => "" })
+  def pathPattern(pattern: String): PathParamsRoute[String] = PathParamsRoute(GET, pattern, { _ => "" })
 
-  def regexPattern(pattern: Regex): RegexRoute[String] = new RegexRoute(GET, pattern, { _ => "" })
+  def regexPattern(pattern: Regex): RegexRoute[String] = RegexRoute(GET, pattern, { _ => "" })
 
   def requestWithPath(p: String): Request = {
     new Request(null) {

@@ -1,4 +1,4 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
 import java.lang.management.ManagementFactory
 import java.util.concurrent.TimeoutException
@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import javax.servlet.{AsyncContext, AsyncEvent, AsyncListener}
 
-import com.springer.link.samatra.routing.Routings.HttpResp
+import com.springer.samatra.routing.Routings.HttpResp
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions

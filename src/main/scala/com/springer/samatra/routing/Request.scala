@@ -1,4 +1,4 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
 import java.io.InputStream
 import java.net.URLDecoder
