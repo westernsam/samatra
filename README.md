@@ -1,4 +1,4 @@
-Samatra [![Build Status](https://travis-ci.org/springernature/samatra.svg?branch=master)](https://travis-ci.org/springernature/samatra)
+Samatra [![Build Status](https://travis-ci.org/springernature/samatra.svg?branch=master)](https://travis-ci.org/springernature/samatra) [![](https://jitpack.io/v/springernature/samatra.svg)](https://jitpack.io/#springernature/samatra)
 =======
 
 ## Decription
@@ -11,8 +11,8 @@ Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). The
 ## How to install
 - sbt: 
 ```
-resolvers += "Repo Tools Sonatype Nexus OSS Releases" at "http://repo.tools.springer-sbm.com:8081/nexus/content/repositories/releases/",
-libraryDependencies += "com.springer" %% "samatra" % "201607251407-19"
+resolvers += "jitpack" at "https://jitpack.io"sbm.com:8081/nexus/content/repositories/releases/",
+libraryDependencies += "com.github.springernature" % "samatra" % "v1.0"	
 ```
 
 You may also be interested in [samatra-extras](https://github.com/springernature/samatra-extras) (which adds some dependencies but has more batteries included).
