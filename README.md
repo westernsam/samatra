@@ -11,7 +11,7 @@ Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). The
 ## How to install
 - sbt: 
 ```
-resolvers += "jitpack" at "https://jitpack.io"sbm.com:8081/nexus/content/repositories/releases/",
+resolvers += "jitpack" at "https://jitpack.io",
 libraryDependencies += "com.github.springernature" % "samatra" % "v1.0"	
 ```
 
