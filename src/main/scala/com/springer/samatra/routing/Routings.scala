@@ -120,21 +120,22 @@ object Routings {
     }
   }
 
-  sealed abstract class WritingRoute[T](method: HttpMethod, response: Request => HttpResp) extends Route {
+  sealed abstract class WritingRoute(method: HttpMethod, response: Request => HttpResp) extends Route {
     override def write(req: Request, resp: HttpServletResponse): Unit = {
       response(req).process(req.underlying, resp)
     }
   }
 
-  sealed case class RegexRoute[T](method: HttpMethod, pattern: Regex, response: Request => HttpResp) extends WritingRoute(method, response) {
-    override def matches(req: Request) = pattern.unapplySeq(req.relativePath).map(_.zipWithIndex.map { case (k, v) => v.toString -> k }.toMap)
+  sealed case class RegexRoute(method: HttpMethod, pattern: Regex, response: Request => HttpResp) extends WritingRoute(method, response) {
+    override def matches(req: Request): Option[Map[String, String]] =
+      pattern.unapplySeq(req.relativePath).map(_.zipWithIndex.map { case (k, v) => v.toString -> k }.toMap)
 
     override def toString: String = {
       s"${method.toString.padTo(4, ' ')} ${pattern.toString.padTo(32, ' ')}"
     }
   }
 
-  sealed case class PathParamsRoute[T](method: HttpMethod, path: String, response: Request => HttpResp) extends WritingRoute(method, response) {
+  sealed case class PathParamsRoute(method: HttpMethod, path: String, response: Request => HttpResp) extends WritingRoute(method, response) {
     override def matches(req: Request): Option[collection.Map[String, String]] = {
       val actual: Array[String] = req.relativePath.split("/")
       val pattern: Array[String] = path.split("/")
