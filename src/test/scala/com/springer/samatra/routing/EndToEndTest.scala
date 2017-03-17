@@ -1,4 +1,4 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
 import java.nio.file.Paths
 import java.util
@@ -6,8 +6,6 @@ import java.util
 import com.springer.samatra.routing.CacheStrategies._
 import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
 import com.springer.samatra.routing.FutureResponses._
-import com.springer.samatra.routing.Routings._
-import com.springer.samatra.routing.CacheStrategies
 import com.springer.samatra.routing.Routings.{Controller, HeadersOnly, HttpResp, Routes}
 import com.springer.samatra.routing.StandardResponses.Implicits._
 import com.springer.samatra.routing.StandardResponses._

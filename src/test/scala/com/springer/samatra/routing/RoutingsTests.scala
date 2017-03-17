@@ -1,6 +1,5 @@
-package com.springer.link.samatra.routing
+package com.springer.samatra.routing
 
-import com.springer.samatra.routing.Request
 import com.springer.samatra.routing.Routings.{GET, PathParamsRoute, RegexRoute}
 import com.springer.samatra.routing.StandardResponses.Implicits.fromString
 import org.scalatest.FunSpec
