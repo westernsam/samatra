@@ -12,7 +12,7 @@ Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). The
 - sbt: 
 ```
 resolvers += "jitpack" at "https://jitpack.io",
-libraryDependencies += "com.github.springernature" % "samatra" % "v1.0"	
+libraryDependencies += "com.github.springernature" %% "samatra" % "v1.1"	
 ```
 
 You may also be interested in [samatra-extras](https://github.com/springernature/samatra-extras) (which adds some dependencies but has more batteries included).
