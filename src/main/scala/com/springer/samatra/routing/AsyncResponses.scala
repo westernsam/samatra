@@ -53,7 +53,7 @@ object AsyncResponses {
             }
           }
         }
-      }, state, timeout, logThreadDumpOnTimeout)) //Does not stop the future running. You must do this
+      }, state, timeout, logThreadDumpOnTimeout))
     }
   }
 
