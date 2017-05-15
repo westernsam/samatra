@@ -31,11 +31,12 @@ Submit issues and PR's to this github.
 Routes can be matched by path with params or regex. Matching on query params in not supported:
 
 ```
-import com.springer.link.samatra.routing.StandardResponses.Implicits._
+import com.springer.samatra.routing.Routings.Controller
+import com.springer.samatra.routing.StandardResponses.Implicits._
 
 object MyController extends Controller {
-    get("/himynameis/:name") { req => s"hi ${req.param("name")}" }
-    get("^/year/(\\d\\d\\d\\d)$".r) { req => s"hell0 the year ${req.group(0)}" }    
+  get("/himynameis/:name") { req => s"hi ${req.captured("name")}" }
+  get("^/year/(\\d\\d\\d\\d)$".r) { req => s"hell0 the year ${req.captured(0)}" }
 }
 ```
 
@@ -64,7 +65,14 @@ It's up to you whether you want to be implicit or explicit. See EndToEndTest for
 See EndToEndTest for examples with jetty e.g.
 
 ```
+import com.springer.samatra.routing.Routings.{Controller, HeadersOnly, Routes}
+import com.springer.samatra.routing.StandardResponses.Halt
+import com.springer.samatra.routing.StandardResponses.Implicits._
+import org.eclipse.jetty.server.{Server, ServerConnector}
+import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
+
+object WebApp extends App {
   private val server = new Server() {
     addConnector(new ServerConnector(this) {
       setPort(8080)
@@ -75,7 +83,7 @@ See EndToEndTest for examples with jetty e.g.
     addServlet(new ServletHolder(
       Routes(
         new Controller {
-          get("/himynameis/:name") { req => s"hi ${req.param("name")}" }
+          get("/himynameis/:name") { req => s"hi ${req.captured("name")}" }
         },
         new Controller {
 
@@ -92,10 +100,12 @@ See EndToEndTest for examples with jetty e.g.
         })), "/*")
 
     addServlet(new ServletHolder(Routes(new Controller {
-      get("^/year/(\\d\\d\\d\\d)$".r) { req => s"hell0 the year ${req.group(0)}" }
+      get("^/year/(\\d\\d\\d\\d)$".r) { req => s"hell0 the year ${req.captured(0)}" }
     })), "/regex/*")
-    
-  }
+  })
+
+  server.start()
+}
 ```
 
 ## Idiomatic use
