@@ -14,6 +14,9 @@ object Routings {
   case object POST extends HttpMethod
   case object PUT extends HttpMethod
   case object DELETE extends HttpMethod
+  case object OPTIONS extends HttpMethod
+  case object TRACE extends HttpMethod
+  case object CONNECT extends HttpMethod
 
   trait HttpResp {
     def process(req: HttpServletRequest, resp: HttpServletResponse): Unit
@@ -87,6 +90,18 @@ object Routings {
     protected def delete(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(DELETE, path, fromRequest))
 
     protected def delete(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(DELETE, pattern, fromRequest))
+
+    protected def options(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(OPTIONS, path, fromRequest))
+
+    protected def options(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(OPTIONS, pattern, fromRequest))
+
+    protected def trace(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(TRACE, path, fromRequest))
+
+    protected def trace(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(TRACE, pattern, fromRequest))
+
+    protected def connect(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(CONNECT, path, fromRequest))
+
+    protected def connect(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(CONNECT, pattern, fromRequest))
   }
 
   class HeadersOnly(val headers: (String, String)*) extends HttpResp {
