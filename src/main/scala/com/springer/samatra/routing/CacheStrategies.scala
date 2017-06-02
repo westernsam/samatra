@@ -10,7 +10,6 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse, HttpServletR
 import javax.servlet.{ServletOutputStream, WriteListener}
 import javax.xml.bind.DatatypeConverter
 
-import com.springer.samatra.routing.AsyncResponses.AsyncHttpResp
 import com.springer.samatra.routing.Routings.HttpResp
 import com.springer.samatra.routing.StandardResponses.WithHeaders
 
@@ -45,7 +44,7 @@ object CacheStrategies {
 
   def revalidateWithStrongEtag(visibility: Visibility = Private, maxAge: Option[Long] = None)(rest: HttpResp): HttpResp = {
     rest match {
-      case AsyncHttpResp(_, _, _, _) => throw new IllegalArgumentException("Cannot do etags with future responses. Move the etag inside the future")
+      case FutureResponses.FutureHttpResp(_, _, _, _, _) => throw new IllegalArgumentException("Cannot do etags with future responses. Move the etag inside the future")
       case _ => WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)((req: HttpServletRequest, resp: HttpServletResponse) => {
         val ifNoneMatch = req.getHeader("If-None-Match")
 
