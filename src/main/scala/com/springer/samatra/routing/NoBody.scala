@@ -12,8 +12,9 @@ case class NoBody(body: (Request) => HttpResp) extends (Request => HttpResp) {
   override def apply(req: Request): HttpResp = {
     val underlyingBody: HttpResp = body(req)
 
-    (req: HttpServletRequest, resp: HttpServletResponse) => {
-      underlyingBody.process(req, new NoBodyResponse(resp))
+    new HttpResp {
+      override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit =
+        underlyingBody.process(req, new NoBodyResponse(resp))
     }
   }
 

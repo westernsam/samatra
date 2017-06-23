@@ -1,14 +1,13 @@
 package com.springer.samatra.routing
 
 import java.io.InputStream
-import java.net.URLDecoder
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.servlet.http._
 
 import scala.collection.JavaConverters
-import scala.io.Source
 import scala.collection.JavaConverters._
+import scala.io.Source
 
 trait RequestTrait {
   def cookie(cookieName: String): Option[String]

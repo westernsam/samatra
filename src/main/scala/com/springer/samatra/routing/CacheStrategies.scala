@@ -32,30 +32,34 @@ object CacheStrategies {
   def noRevalidate(visibility: Visibility = Private, maxAge: Option[Long] = None)(rest: => HttpResp): HttpResp = WithHeaders(CacheHeaders(visibility, maxAge): _*)(rest)
 
   def revalidate(visibility: Visibility = Private, maxAge: Option[Long] = None, etagStrategy: RevalidateStrategy)(rest: => HttpResp): HttpResp = {
-    WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)((req: HttpServletRequest, resp: HttpServletResponse) => {
-      val ifNoneMatch = req.getHeader("If-None-Match")
-      val etag: String = s"""W/"${etagStrategy()}""""
-      resp.setHeader("ETag", etag)
+    WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)(new HttpResp {
+      override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+        val ifNoneMatch = req.getHeader("If-None-Match")
+        val etag: String = s"""W/"${etagStrategy()}""""
+        resp.setHeader("ETag", etag)
 
-      if (etag == ifNoneMatch) resp.setStatus(304)
-      else rest.process(req, resp)
+        if (etag == ifNoneMatch) resp.setStatus(304)
+        else rest.process(req, resp)
+      }
     })
   }
 
   def revalidateWithStrongEtag(visibility: Visibility = Private, maxAge: Option[Long] = None)(rest: HttpResp): HttpResp = {
     rest match {
       case FutureResponses.FutureHttpResp(_, _, _, _, _) => throw new IllegalArgumentException("Cannot do etags with future responses. Move the etag inside the future")
-      case _ => WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)((req: HttpServletRequest, resp: HttpServletResponse) => {
-        val ifNoneMatch = req.getHeader("If-None-Match")
+      case _ => WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)(new HttpResp {
+        override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+          val ifNoneMatch = req.getHeader("If-None-Match")
 
-        val capture = new BodyCaptureResponse(resp)
-        rest.process(req, capture)
+          val capture = new BodyCaptureResponse(resp)
+          rest.process(req, capture)
 
-        val md5 = s""""${capture.hexOfmd5()}""""
-        resp.setHeader("ETag", md5)
+          val md5 = s""""${capture.hexOfmd5()}""""
+          resp.setHeader("ETag", md5)
 
-        if (md5 == ifNoneMatch) resp.setStatus(304)
-        else resp.getOutputStream.write(capture.body())
+          if (md5 == ifNoneMatch) resp.setStatus(304)
+          else resp.getOutputStream.write(capture.body())
+        }
       })
     }
   }

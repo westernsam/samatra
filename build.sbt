@@ -4,7 +4,7 @@ organization := "com.springer"
 
 version := Option(System.getenv("GO_PIPELINE_LABEL")).getOrElse("LOCAL")
 
-crossScalaVersions := Seq("2.12.0", "2.11.7")
+crossScalaVersions := Seq("2.12.2", "2.11.7")
 
 scalaVersion := crossScalaVersions.value.head
 
