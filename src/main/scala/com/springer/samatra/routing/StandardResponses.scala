@@ -32,7 +32,7 @@ object StandardResponses {
     }
   }
 
-  case class WithHeaders[T](headers: (String, String)*)(implicit rest: HttpResp) extends HttpResp {
+  case class WithHeaders(headers: (String, String)*)(implicit rest: HttpResp) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       headers.foreach(t => resp.setHeader(t._1, t._2))
       rest.process(req, resp)
@@ -43,7 +43,7 @@ object StandardResponses {
   case class AddCookie(name: String, value: String, maxAge: Option[Int] = None, domain: String = ".springer.com", path: String = "/", httpOnly: Boolean = false) extends CookieAction
   case class RemoveCookie(name: String) extends CookieAction
 
-  case class WithCookies[T](cookies: Seq[CookieAction])(val rest: HttpResp) extends HttpResp {
+  case class WithCookies(cookies: Seq[CookieAction])(val rest: HttpResp) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       cookies.foreach {
         case add: AddCookie =>

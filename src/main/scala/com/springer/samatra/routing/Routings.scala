@@ -59,29 +59,29 @@ object Routings {
   abstract class Controller extends Routes {
     val routes: ArrayBuffer[Route] = new ArrayBuffer[Route]()
 
-    protected def get[T](path: String)(body: Request => HttpResp): Unit = {
+    protected def get(path: String)(body: Request => HttpResp): Unit = {
       getWithoutHead(path)(body)
       routes.append(PathParamsRoute(HEAD, path, NoBody(body)))
     }
 
-    protected def get[T](pattern: Regex)(body: Request => HttpResp): Unit = {
+    protected def get(pattern: Regex)(body: Request => HttpResp): Unit = {
       getWithoutHead(pattern)(body)
       routes.append(RegexRoute(HEAD, pattern, NoBody(body)))
     }
 
     //noinspection AccessorLikeMethodIsUnit
-    protected def getWithoutHead[T](path: String)(body: Request => HttpResp): Unit = routes.append(PathParamsRoute(GET, path, body))
+    protected def getWithoutHead(path: String)(body: Request => HttpResp): Unit = routes.append(PathParamsRoute(GET, path, body))
 
     //noinspection AccessorLikeMethodIsUnit
-    protected def getWithoutHead[T](pattern: Regex)(body: Request => HttpResp): Unit = routes.append(RegexRoute(GET, pattern, body))
+    protected def getWithoutHead(pattern: Regex)(body: Request => HttpResp): Unit = routes.append(RegexRoute(GET, pattern, body))
 
-    protected def post[T](path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(POST, path, fromRequest))
+    protected def post(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(POST, path, fromRequest))
 
-    protected def post[T](pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(POST, pattern, fromRequest))
+    protected def post(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(POST, pattern, fromRequest))
 
-    protected def put[T](path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(PUT, path, fromRequest))
+    protected def put(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(PUT, path, fromRequest))
 
-    protected def put[T](pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(PUT, pattern, fromRequest))
+    protected def put(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(PUT, pattern, fromRequest))
 
     protected def head(path: String)(fromRequest: Request => HeadersOnly): Unit = routes.append(PathParamsRoute(HEAD, path, fromRequest))
 
@@ -111,7 +111,7 @@ object Routings {
   }
 
   object HeadersOnly {
-    def apply[T](headers: (String, String)*) = new HeadersOnly(headers: _*)
+    def apply(headers: (String, String)*): HeadersOnly = new HeadersOnly(headers: _*)
   }
 
   trait Route {
