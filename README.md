@@ -30,7 +30,7 @@ Submit issues and PR's to this github.
 ## Routing
 Routes can be matched by path with params or regex. Matching on query params in not supported:
 
-```
+```scala
 import com.springer.samatra.routing.Routings.Controller
 import com.springer.samatra.routing.StandardResponses.Implicits._
 
@@ -64,7 +64,7 @@ It's up to you whether you want to be implicit or explicit. See EndToEndTest for
 ## Using with servlet container
 See EndToEndTest for examples with jetty e.g.
 
-```
+```scala
 import com.springer.samatra.routing.Routings.{Controller, HeadersOnly, Routes}
 import com.springer.samatra.routing.StandardResponses.Halt
 import com.springer.samatra.routing.StandardResponses.Implicits._
@@ -115,7 +115,7 @@ You could equally use Hystrix with the trick used here http://runkalrun.blogspot
  
 This allows you to compose scala futures in fun and interesting ways e.g.
 
-```
+```scala
   get("/internal/dependencies") { _ =>
     val contentApiUri: String = s"http://$contentApiHost"
     val simUri: String = s"http://$simLoginHost"
