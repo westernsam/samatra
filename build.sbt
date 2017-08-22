@@ -4,7 +4,7 @@ organization := "com.springer"
 
 version := Option(System.getenv("GO_PIPELINE_LABEL")).getOrElse("LOCAL")
 
-crossScalaVersions := Seq("2.12.2", "2.11.7")
+crossScalaVersions := Seq("2.12.3", "2.11.7")
 
 scalaVersion := crossScalaVersions.value.head
 
@@ -27,7 +27,7 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-jmx" % jettyVersion % "test",
 
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    "org.asynchttpclient" % "async-http-client" % "2.1.0-alpha1" % "test"
+    "org.asynchttpclient" % "async-http-client" % "2.0.32" % "test"
   )
 
 parallelExecution in Test := false
