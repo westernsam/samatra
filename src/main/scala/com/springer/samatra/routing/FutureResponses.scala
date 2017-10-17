@@ -31,14 +31,14 @@ object FutureResponses {
   case object Rendering extends State
   case object Timedout extends State
 
-  case class FutureHttpResp[T](fut: Future[T], timeout: Long, rest: T => HttpResp, executionContext: ExecutionContext, logThreadDumpOnTimeout: Boolean) extends HttpResp {
+  case class FutureHttpResp[T](fut: Future[T], timeout: Long, rest: T => HttpResp, executionContext: ExecutionContext, logThreadDumpOnTimeout: Boolean, responseCodeOnTimeout : Int = 500) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       val state = new AtomicReference[State](Running)
 
       val async: AsyncContext = req.startAsync(req, resp)
 
       async.setTimeout(timeout)
-      async.addListener(new TimingOutListener(state, timeout, logThreadDumpOnTimeout)) //Does not stop the future running. You must do this
+      async.addListener(new TimingOutListener(state, timeout, logThreadDumpOnTimeout, responseCodeOnTimeout)) //Does not stop the future running. You must do this
 
       fut.onComplete { t =>
         if (state.getAndSet(Rendering) == Running) {
@@ -61,7 +61,7 @@ object FutureResponses {
     }
   }
 
-  class TimingOutListener(state: AtomicReference[State], timeout: Long, logThreadDumpOnTimeout: Boolean) extends AsyncListener {
+  class TimingOutListener(state: AtomicReference[State], timeout: Long, logThreadDumpOnTimeout: Boolean, responseCodeOnTimeout : Int) extends AsyncListener {
     override def onError(event: AsyncEvent): Unit = ()
     override def onComplete(event: AsyncEvent): Unit = ()
     override def onStartAsync(event: AsyncEvent): Unit = ()
@@ -72,7 +72,7 @@ object FutureResponses {
           if (!response.isCommitted) {
             event.getSuppliedRequest.setAttribute("javax.servlet.error.exception",
               new TimeoutException(s"Request exceeded timeout of $timeout\n${if (logThreadDumpOnTimeout) ThreadDumps.generateThreadDump() else ""}"))
-            response.sendError(500)
+            response.sendError(responseCodeOnTimeout)
           }
         } finally {
           Try { response.getOutputStream.close() }
