@@ -27,7 +27,7 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-jmx" % jettyVersion % "test",
 
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    "org.asynchttpclient" % "async-http-client" % "2.0.32" % "test"
+    "org.asynchttpclient" % "async-http-client" % "2.0.37" % "test"
   )
 
 parallelExecution in Test := false
