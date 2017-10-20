@@ -46,7 +46,7 @@ object CacheStrategies {
 
   def revalidateWithStrongEtag(visibility: Visibility = Private, maxAge: Option[Long] = None)(rest: HttpResp): HttpResp = {
     rest match {
-      case FutureResponses.FutureHttpResp(_, _, _, _, _) => throw new IllegalArgumentException("Cannot do etags with future responses. Move the etag inside the future")
+      case FutureResponses.FutureHttpResp(_, _, _, _, _, _) => throw new IllegalArgumentException("Cannot do etags with future responses. Move the etag inside the future")
       case _ => WithHeaders(CacheHeaders(visibility, maxAge, nonCache = true): _*)(new HttpResp {
         override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
           val ifNoneMatch = req.getHeader("If-None-Match")
