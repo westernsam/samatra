@@ -23,9 +23,8 @@ class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
   server.setHandler(new ServletContextHandler(ServletContextHandler.SESSIONS) {
     sc =>
     setServer(server)
-    setContextPath("/ws/*")
 
-    WsRoutes(configureContext(sc), new WSController {
+    WsRoutes(configureContext(sc), "/ws/*", new WSController {
       mount("/echo") { ws =>
         new WS {
           override def onMsg(msg: String): Unit = ws.send(s"$msg")

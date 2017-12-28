@@ -94,7 +94,7 @@ object WsRoutings {
   }
 
   object WsRoutes {
-    def apply(mountOn: ServerContainer, controllers: WsRoutes*): Unit = {
+    def apply(mountOn: ServerContainer, pathSpec: String, controllers: WsRoutes*): Unit = {
       controllers.flatMap(_.routes).foreach { r =>
         mountOn.addEndpoint(new ServerEndpointConfig {
 
@@ -110,7 +110,7 @@ object WsRoutings {
               super.modifyHandshake(sec, request, response)
             }
           }
-          override def getPath: String = r.path.split("/").map {
+          override def getPath: String = pathSpec.substring(0, pathSpec.length-2) + r.path.split("/").map {
             case pattern if pattern.startsWith(":") => s"{${pattern.substring(1)}}"
             case p => p
           }.mkString("/")
