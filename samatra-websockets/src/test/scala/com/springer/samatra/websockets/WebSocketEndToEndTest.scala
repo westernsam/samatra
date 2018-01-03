@@ -9,8 +9,8 @@ import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer.configureContext
-import org.scalatest.{BeforeAndAfterAll, FunSpec}
 import org.scalatest.Matchers._
+import org.scalatest.{BeforeAndAfterAll, FunSpec}
 
 class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
 
