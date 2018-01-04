@@ -118,7 +118,7 @@ object WsRoutings {
           override def getSubprotocols: util.List[String] = util.Arrays.asList("text", "binary")
           override def getDecoders: util.List[Class[_ <: Decoder]] = util.Collections.emptyList()
           override def getExtensions: util.List[Extension] = util.Collections.emptyList()
-          override def getUserProperties: util.Map[String, AnyRef] = new util.HashMap[String, AnyRef]
+          override val getUserProperties: util.Map[String, AnyRef] = new util.HashMap[String, AnyRef]
           override def getEncoders: util.List[Class[_ <: Encoder]] = util.Collections.emptyList()
         })
       }
