@@ -2,6 +2,7 @@ package com.springer.samatra.websockets
 
 import java.net.HttpCookie
 import java.nio.ByteBuffer
+import java.security.Principal
 import java.util
 import javax.websocket._
 import javax.websocket.server.{HandshakeRequest, ServerContainer, ServerEndpoint, ServerEndpointConfig}
@@ -41,7 +42,6 @@ object WsRoutings {
         }
         override def close(code: Int, msg: String): Unit = sess.close(new CloseReason(CloseReason.CloseCodes.getCloseCode(code), msg))
         override def send(msg: String): Unit = sess.getBasicRemote.sendText(msg)
-
         override def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit] = {
           msg.flatMap { str =>
             val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendText(str)
@@ -52,6 +52,25 @@ object WsRoutings {
             }
           }
         }
+        override def broadcast(msg: String): List[String] =
+          sess.getOpenSessions.asScala.map { sess => sess.getBasicRemote.sendText(msg); sess.getId }.toList
+
+        override def broadcast(msg: Future[String])(implicit ex: ExecutionContext): Future[List[String]] = {
+          msg.flatMap { msg =>
+            val eventualVoids: List[Future[String]] = sess.getOpenSessions.asScala.toList.map { sess =>
+              val r = sess.getAsyncRemote.sendText(msg)
+              Future {
+                blocking {
+                  r.get
+                  sess.getId
+                }
+              }
+            }
+
+            Future.sequence(eventualVoids)
+          }
+        }
+
         override def captured(name: String): String = sess.getPathParameters.asScala.toMap.apply(name)
         override def path: String = sess.getRequestURI.getPath
         override def toUri: String = sess.getRequestURI.toString
@@ -68,8 +87,9 @@ object WsRoutings {
         override def header(name: String): Option[String] = headers(name.toLowerCase).headOption
         override def headers(name: String): Seq[String] = upgradeHeaders.getOrElse(name.toLowerCase, Seq.empty)
 
-        private lazy val upgradeHeaders: Map[String, Seq[String]] = sess.getUserProperties.get("headers").asInstanceOf[Map[String, Seq[String]]]
+        override def user: Option[Principal] = Option(sess.getUserProperties.get("user")).map(_.asInstanceOf[Principal])
 
+        private lazy val upgradeHeaders: Map[String, Seq[String]] = sess.getUserProperties.get("headers").asInstanceOf[Map[String, Seq[String]]]
       }
       soc = ws(socComms)
       try {
@@ -107,10 +127,11 @@ object WsRoutings {
             override def modifyHandshake(sec: ServerEndpointConfig, request: HandshakeRequest, response: HandshakeResponse): Unit = {
               val headers: Map[String, mutable.Buffer[String]] = request.getHeaders.asScala.map { case (k, v) => k.toLowerCase -> v.asScala }.toMap
               sec.getUserProperties.put("headers", headers)
+              sec.getUserProperties.put("user", request.getUserPrincipal)
               super.modifyHandshake(sec, request, response)
             }
           }
-          override def getPath: String = pathSpec.substring(0, pathSpec.length-2) + r.path.split("/").map {
+          override def getPath: String = pathSpec.substring(0, pathSpec.length - 2) + r.path.split("/").map {
             case pattern if pattern.startsWith(":") => s"{${pattern.substring(1)}}"
             case p => p
           }.mkString("/")
@@ -130,6 +151,9 @@ object WsRoutings {
     def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit]
     def sendBinary(msg: Array[Byte]): Unit
     def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit]
+    def broadcast(msg: String): List[String]
+    def broadcast(msg: Future[String])(implicit ex: ExecutionContext): Future[List[String]]
+
     def close(code: Int, msg: String): Unit
 
     def captured(name: String): String
@@ -142,6 +166,7 @@ object WsRoutings {
     def cookie(cookieName: String): Option[String]
     def header(name: String): Option[String]
     def headers(name: String): Seq[String]
+    def user: Option[Principal]
   }
 
   trait WS {
