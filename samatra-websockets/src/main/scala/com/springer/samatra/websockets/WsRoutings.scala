@@ -22,7 +22,7 @@ object WsRoutings {
     val routes: mutable.Buffer[WsRoute] = mutable.Buffer[WsRoute]()
   }
 
-  class SessionBackWSend(sess: Session) extends WSSend {
+  class SessionBackedWSSend(val sess: Session) extends WSSend {
     override def id: String = sess.getId
     override def sendBinary(msg: Array[Byte]): Unit = sess.getBasicRemote.sendBinary(ByteBuffer.wrap(msg))
     override def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit] = {
@@ -49,11 +49,11 @@ object WsRoutings {
     }
 
     override def broadcast(msg: String, p: WSSend => Boolean = _ => true): List[WSSend] =
-      sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackWSend(s)).filter(p)
+      sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackedWSSend(s)).filter(p)
         .map { ws => ws.send(msg); ws }.toList
 
     override def broadcast(msg: Future[String], p: WSSend => Boolean)(implicit ex: ExecutionContext): Future[List[WSSend]] = {
-      val matchingSockets = sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackWSend(s)).filter(p)
+      val matchingSockets = sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackedWSSend(s)).filter(p)
 
       Future.sequence(matchingSockets.toList.map { ws =>
         ws.send(msg).map(_ => ws)
@@ -87,7 +87,7 @@ object WsRoutings {
     var socComms: WSSend = _
 
     @OnOpen def onWebSocketConnect(sess: Session): Unit = {
-      socComms = new SessionBackWSend(sess)
+      socComms = new SessionBackedWSSend(sess)
       soc = ws(socComms)
       try {
         soc.onConnect()
@@ -106,7 +106,10 @@ object WsRoutings {
     } catch {
       case t: Throwable => socComms.close(CloseReason.CloseCodes.CLOSED_ABNORMALLY.getCode, t.getMessage)
     }
-    @OnClose def onWebSocketClose(reason: CloseReason): Unit = soc.onEnd(reason.getCloseCode.getCode)
+    @OnClose def onWebSocketClose(reason: CloseReason): Unit = {
+      socComms.close(reason.getCloseCode.getCode, reason.getReasonPhrase)
+      soc.onEnd(reason.getCloseCode.getCode)
+    }
     @OnError def onWebSocketError(cause: Throwable): Unit = soc.onError(cause)
   }
 
