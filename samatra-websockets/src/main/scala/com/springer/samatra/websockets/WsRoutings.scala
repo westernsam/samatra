@@ -49,11 +49,11 @@ object WsRoutings {
     }
 
     override def broadcast(msg: String, p: WSSend => Boolean = _ => true): List[WSSend] =
-      sess.getOpenSessions.asScala.map(s => new SessionBackWSend(s)).filter(p)
+      sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackWSend(s)).filter(p)
         .map { ws => ws.send(msg); ws }.toList
 
     override def broadcast(msg: Future[String], p: WSSend => Boolean)(implicit ex: ExecutionContext): Future[List[WSSend]] = {
-      val matchingSockets = sess.getOpenSessions.asScala.map(s => new SessionBackWSend(s)).filter(p)
+      val matchingSockets = sess.getOpenSessions.asScala.filter(_.isOpen).map(s => new SessionBackWSend(s)).filter(p)
 
       Future.sequence(matchingSockets.toList.map { ws =>
         ws.send(msg).map(_ => ws)
