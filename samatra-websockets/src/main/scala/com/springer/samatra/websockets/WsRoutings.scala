@@ -22,75 +22,72 @@ object WsRoutings {
     val routes: mutable.Buffer[WsRoute] = mutable.Buffer[WsRoute]()
   }
 
+  class SessionBackWSend(sess: Session) extends WSSend {
+    override def id: String = sess.getId
+    override def sendBinary(msg: Array[Byte]): Unit = sess.getBasicRemote.sendBinary(ByteBuffer.wrap(msg))
+    override def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit] = {
+      msg.flatMap { bytes =>
+        val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendBinary(ByteBuffer.wrap(bytes))
+        Future {
+          blocking {
+            value.get
+          }
+        }
+      }
+    }
+    override def close(code: Int, msg: String): Unit = sess.close(new CloseReason(CloseReason.CloseCodes.getCloseCode(code), msg))
+    override def send(msg: String): Unit = sess.getBasicRemote.sendText(msg)
+    override def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit] = {
+      msg.flatMap { str =>
+        val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendText(str)
+        Future {
+          blocking {
+            value.get
+          }
+        }
+      }
+    }
+
+    override def broadcast(msg: String, p: WSSend => Boolean = _ => true): List[WSSend] =
+      sess.getOpenSessions.asScala.map(s => new SessionBackWSend(s)).filter(p)
+        .map { ws => ws.send(msg); ws }.toList
+
+    override def broadcast(msg: Future[String], p: WSSend => Boolean)(implicit ex: ExecutionContext): Future[List[WSSend]] = {
+      val matchingSockets = sess.getOpenSessions.asScala.map(s => new SessionBackWSend(s)).filter(p)
+
+      Future.sequence(matchingSockets.toList.map { ws =>
+        ws.send(msg).map(_ => ws)
+      })
+    }
+
+    override def captured(name: String): String = sess.getPathParameters.asScala.toMap.apply(name)
+    override def path: String = sess.getRequestURI.getPath
+    override def toUri: String = sess.getRequestURI.toString
+    override def queryStringParamValue(name: String): String = {
+      val scala: mutable.Map[String, util.List[String]] = sess.getRequestParameterMap.asScala
+      scala.get(name).map(_.asScala).getOrElse(Seq.empty).headOption.orNull
+    }
+
+    override def queryStringParamValues(name: String): Set[String] = sess.getRequestParameterMap.asScala.get(name).map(_.asScala.toSet).getOrElse(Set.empty)
+    override def cookie(cookieName: String): Option[String] = cookies.find(_.getName == cookieName).map(_.getValue)
+
+    override def cookies: Seq[HttpCookie] = HttpCookie.parse(header("cookie").orNull).asScala
+
+    override def header(name: String): Option[String] = headers(name.toLowerCase).headOption
+    override def headers(name: String): Seq[String] = upgradeHeaders.getOrElse(name.toLowerCase, Seq.empty)
+
+    override def user: Option[Principal] = Option(sess.getUserProperties.get("user")).map(_.asInstanceOf[Principal])
+
+    private lazy val upgradeHeaders: Map[String, Seq[String]] = sess.getUserProperties.get("headers").asInstanceOf[Map[String, Seq[String]]]
+  }
+
   @ServerEndpoint("/*")
   class SamatraWebSocket(ws: WSSend => WS, pattern: String) {
     var soc: WS = _
     var socComms: WSSend = _
 
     @OnOpen def onWebSocketConnect(sess: Session): Unit = {
-      socComms = new WSSend {
-        override def sendBinary(msg: Array[Byte]): Unit = sess.getBasicRemote.sendBinary(ByteBuffer.wrap(msg))
-        override def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit] = {
-          msg.flatMap { bytes =>
-            val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendBinary(ByteBuffer.wrap(bytes))
-            Future {
-              blocking {
-                value.get
-              }
-            }
-          }
-        }
-        override def close(code: Int, msg: String): Unit = sess.close(new CloseReason(CloseReason.CloseCodes.getCloseCode(code), msg))
-        override def send(msg: String): Unit = sess.getBasicRemote.sendText(msg)
-        override def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit] = {
-          msg.flatMap { str =>
-            val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendText(str)
-            Future {
-              blocking {
-                value.get
-              }
-            }
-          }
-        }
-        override def broadcast(msg: String): List[String] =
-          sess.getOpenSessions.asScala.map { sess => sess.getBasicRemote.sendText(msg); sess.getId }.toList
-
-        override def broadcast(msg: Future[String])(implicit ex: ExecutionContext): Future[List[String]] = {
-          msg.flatMap { msg =>
-            val eventualVoids: List[Future[String]] = sess.getOpenSessions.asScala.toList.map { sess =>
-              val r = sess.getAsyncRemote.sendText(msg)
-              Future {
-                blocking {
-                  r.get
-                  sess.getId
-                }
-              }
-            }
-
-            Future.sequence(eventualVoids)
-          }
-        }
-
-        override def captured(name: String): String = sess.getPathParameters.asScala.toMap.apply(name)
-        override def path: String = sess.getRequestURI.getPath
-        override def toUri: String = sess.getRequestURI.toString
-        override def queryStringParamValue(name: String): String = {
-          val scala: mutable.Map[String, util.List[String]] = sess.getRequestParameterMap.asScala
-          scala.get(name).map(_.asScala).getOrElse(Seq.empty).headOption.orNull
-        }
-
-        override def queryStringParamValues(name: String): Set[String] = sess.getRequestParameterMap.asScala.get(name).map(_.asScala.toSet).getOrElse(Set.empty)
-        override def cookie(cookieName: String): Option[String] = cookies.find(_.getName == cookieName).map(_.getValue)
-
-        override def cookies: Seq[HttpCookie] = HttpCookie.parse(header("cookie").orNull).asScala
-
-        override def header(name: String): Option[String] = headers(name.toLowerCase).headOption
-        override def headers(name: String): Seq[String] = upgradeHeaders.getOrElse(name.toLowerCase, Seq.empty)
-
-        override def user: Option[Principal] = Option(sess.getUserProperties.get("user")).map(_.asInstanceOf[Principal])
-
-        private lazy val upgradeHeaders: Map[String, Seq[String]] = sess.getUserProperties.get("headers").asInstanceOf[Map[String, Seq[String]]]
-      }
+      socComms = new SessionBackWSend(sess)
       soc = ws(socComms)
       try {
         soc.onConnect()
@@ -151,8 +148,8 @@ object WsRoutings {
     def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit]
     def sendBinary(msg: Array[Byte]): Unit
     def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit]
-    def broadcast(msg: String): List[String]
-    def broadcast(msg: Future[String])(implicit ex: ExecutionContext): Future[List[String]]
+    def broadcast(msg: String, p: WSSend => Boolean = _ => true): List[WSSend]
+    def broadcast(msg: Future[String], p: WSSend => Boolean)(implicit ex: ExecutionContext): Future[List[WSSend]]
 
     def close(code: Int, msg: String): Unit
 
@@ -167,6 +164,7 @@ object WsRoutings {
     def header(name: String): Option[String]
     def headers(name: String): Seq[String]
     def user: Option[Principal]
+    def id: String
   }
 
   trait WS {
