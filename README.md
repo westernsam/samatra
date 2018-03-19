@@ -4,7 +4,7 @@ Samatra [![Build Status](https://travis-ci.org/springernature/samatra.svg?branch
 ## Decription
 Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). There's not a lot to it - you could write it yourself.
 
-[Samatra-extras](https://github.com/springernature/samatra-extras) provides more features but has more dependencies
+[Samatra-extras](https://github.com/springernature/samatra-extras) provides more features but has more dependencies. Documentation [here](https://github.com/springernature/samatra-extras/wiki)
 
 ## Supported platforms
 - Scala 2.12
