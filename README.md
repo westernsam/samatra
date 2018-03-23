@@ -8,13 +8,13 @@ Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). The
 
 ## Supported platforms
 - Scala 2.12
-- Only dependency is servlet-api 3.1.0 - you can run with any compliant web server (only tested with Jetty 9.3.6.v20151106)
+- Only dependency is servlet-api 3.1.0 - you can run with any compliant web server (only tested with Jetty 9.4.8.v20171121)
 
 ## How to install
 - sbt: 
 ```
 resolvers += "jitpack" at "https://jitpack.io",
-libraryDependencies += "com.github.springernature" %% "samatra" % "v1.3"	
+libraryDependencies += "com.github.springernature" %% "samatra" % "v1.5.0"	
 ```
 
 You may also be interested in [samatra-extras](https://github.com/springernature/samatra-extras) (which adds some dependencies but has more batteries included).
