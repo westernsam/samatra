@@ -3,8 +3,9 @@ package com.springer.samatra.websockets
 import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import com.springer.samatra.websockets.WsRoutings.{WS, WSController, WriteOnly, WsRoutes}
-import org.asynchttpclient.cookie.Cookie
-import org.asynchttpclient.ws.{DefaultWebSocketListener, WebSocket, WebSocketListener, WebSocketUpgradeHandler}
+import io.netty.handler.codec.http.cookie.DefaultCookie
+import org.asynchttpclient.netty.ws.NettyWebSocket
+import org.asynchttpclient.ws.{WebSocket, WebSocketListener, WebSocketUpgradeHandler}
 import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -67,7 +68,7 @@ class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
     waitForLatch("echo", latch => new DefaultWebSocketListener() {
       override def onOpen(websocket: WebSocket): Unit = {
         println("Sending echo")
-        websocket.sendMessage("echo")
+        websocket.sendTextFrame("echo")
       }
 
       override def onMessage(message: String): Unit = {
@@ -78,16 +79,35 @@ class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
     })
   }
 
+  trait DefaultWebSocketListener extends WebSocketListener {
+    override def onOpen(websocket: WebSocket): Unit = ()
+    override def onClose(websocket: WebSocket, code: Int, reason: String): Unit = ()
+    override def onError(t: Throwable): Unit = ()
+
+    override def onTextFrame(payload: String, finalFragment: Boolean, rsv: Int): Unit = {
+      onMessage(payload)
+    }
+
+
+    override def onBinaryFrame(payload: Array[Byte], finalFragment: Boolean, rsv: Int): Unit = {
+      onMessage(payload)
+    }
+
+    def onMessage(message: String) : Unit = ()
+    def onMessage(arr: Array[Byte]): Unit = ()
+  }
+
+
   it("should do the web sockets with binary message") {
     waitForLatch("echo-binary", latch => new DefaultWebSocketListener() {
       override def onOpen(websocket: WebSocket): Unit = {
         println("Sending echo")
-        websocket.sendMessage("echo".getBytes())
+        websocket.sendBinaryFrame("echo".getBytes())
       }
 
       override def onMessage(message: Array[Byte]): Unit = {
         new String(message) shouldBe "echo"
-        println(s"yep got $message")
+        println(s"yep got ${new String(message)} in binary")
         latch.countDown()
       }
     })
@@ -95,13 +115,14 @@ class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
 
   def waitForLatch(path: String, wsl: CountDownLatch => WebSocketListener): Unit = {
     val latch = new CountDownLatch(1)
-    val socket = asyncHttpClient.prepareGet(s"$host/ws/$path")
+    val socket: NettyWebSocket = asyncHttpClient.prepareGet(s"$host/ws/$path")
       .addHeader("name", "header")
       .addQueryParam("q", "1")
-      .addCookie(new Cookie("name", "value", false, "localhost", "/", -1, false, true))
+      .addCookie(new DefaultCookie("name", "value"))
       .execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(wsl(latch)).build()).get()
     if (!latch.await(1, TimeUnit.SECONDS)) fail("Expected to finish already!")
-    socket.close()
+
+    socket.onClose(1, host)
   }
 
   override protected def beforeAll(): Unit = {

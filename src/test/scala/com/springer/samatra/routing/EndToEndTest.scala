@@ -1,7 +1,6 @@
 package com.springer.samatra.routing
 
 import java.nio.file.Paths
-import java.util
 
 import com.springer.samatra.routing.CacheStrategies._
 import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
@@ -9,6 +8,7 @@ import com.springer.samatra.routing.FutureResponses._
 import com.springer.samatra.routing.Routings.{Controller, HeadersOnly, HttpResp, Routes}
 import com.springer.samatra.routing.StandardResponses.Implicits._
 import com.springer.samatra.routing.StandardResponses._
+import io.netty.handler.codec.http.DefaultHttpHeaders
 import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig, Response}
 import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
@@ -133,7 +133,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
       res.getStatusCode shouldBe 200
       res.getHeader("Cache-Control") shouldBe "no-cache, private"
       val etag: String = res.getHeader("ETag")
-      etag should startWith ("W/\"")
+      etag should startWith("W/\"")
 
       val res2 = get(s"/caching/weakEtag/sam", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
 
@@ -205,7 +205,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
       head("/future/morethanone/headers").getHeader("hi") shouldBe "there"
 
       val cookie = head("/future/morethanone/cookies").getCookies.asScala.collectFirst {
-        case c if c.getName == "cookie" => c.getValue
+        case c if c.name() == "cookie" => c.value()
       }
 
       cookie shouldBe Some("tasty")
@@ -241,7 +241,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
     }
 
     it("should be able to set cookies") {
-      get("/future/morethanone/cookies").getCookies.asScala.head.getValue shouldBe "tasty"
+      get("/future/morethanone/cookies").getCookies.asScala.head.value() shouldBe "tasty"
     }
 
     it("should be able to retrieve request uri") {
@@ -261,15 +261,17 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
 
   val asyncHttpClient = new DefaultAsyncHttpClient(new DefaultAsyncHttpClientConfig.Builder().setKeepEncodingHeader(true).build())
 
-  def get(path: String, headers: Map[String, Seq[String]] = Map.empty): Response = asyncHttpClient.prepareGet(s"$host$path").setHeaders(toJavaMap(headers)).execute().get()
+  def get(path: String, headers: Map[String, Seq[String]] = Map.empty): Response = {
+    val hs = new DefaultHttpHeaders()
+    headers.foreach { case (k, v) => hs.add(k, v.asJava) }
+
+    asyncHttpClient.prepareGet(s"$host$path")
+      .setHeaders(hs)
+      .execute().get()
+  }
+
   def head(path: String): Response = asyncHttpClient.prepareHead(s"$host$path").execute().get()
   def post(path: String, body: String = ""): Response = asyncHttpClient.preparePost(s"$host$path").setBody(body).execute().get()
-
-  private def toJavaMap(headers: Map[String, Seq[String]]): util.Map[String, util.Collection[String]] = {
-
-    val headersMap: util.Map[String, util.Collection[String]] = headers.mapValues(_.asJava.asInstanceOf[util.Collection[String]]).asJava
-    headersMap
-  }
 
   override protected def beforeAll(): Unit = {
     server.start()

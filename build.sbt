@@ -15,7 +15,7 @@ lazy val commonSettings = Seq(
   }
 )
 
-val jettyVersion = "9.4.7.v20170914"
+val jettyVersion = "9.4.10.v20180503"
 
 libraryDependencies ++=
   Seq(
@@ -30,8 +30,8 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-servlets" % jettyVersion % "test",
     "org.eclipse.jetty" % "jetty-util" % jettyVersion % "test",
 
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    "org.asynchttpclient" % "async-http-client" % "2.0.37" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+    "org.asynchtt2.4.7pclient" % "async-http-client" % "" % "test"
   )
 
 lazy val `samatra-websockets` = project.in(file("samatra-websockets"))

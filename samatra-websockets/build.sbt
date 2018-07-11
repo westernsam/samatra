@@ -1,4 +1,4 @@
-val jettyVersion = "9.4.7.v20170914"
+val jettyVersion = "9.4.10.v20180503"
 
 libraryDependencies ++=
   Seq(
@@ -14,6 +14,6 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-util" % jettyVersion % "test",
     "org.eclipse.jetty.websocket" % "websocket-api" % jettyVersion % "test",
     "org.eclipse.jetty.websocket" % "javax-websocket-server-impl" % jettyVersion % "test",
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    "org.asynchttpclient" % "async-http-client" % "2.0.37" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+    "org.asynchttpclient" % "async-http-client" % "2.4.7" % "test"
   )
