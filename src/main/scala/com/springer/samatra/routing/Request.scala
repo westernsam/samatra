@@ -39,10 +39,10 @@ case class Request(underlying: HttpServletRequest, params: collection.Map[String
 
   def path: String = underlying.getRequestURI
 
-  //relative to servlet path
+  //relative to context and servlet path
   def relativePath: String =
-    if (path.indexOf(underlying.getServletPath) > -1)
-      path.substring(underlying.getServletPath.length)
+    if (path.indexOf(underlying.getContextPath + underlying.getServletPath) > -1)
+      path.substring(underlying.getContextPath.length + underlying.getServletPath.length)
     else
       path
 

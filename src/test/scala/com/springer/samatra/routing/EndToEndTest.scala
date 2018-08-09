@@ -30,6 +30,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
 
   private val handler = new GzipHandler()
   handler.setHandler(new ServletContextHandler() {
+    setContextPath("/test")
     addServlet(new ServletHolder(
       Routes(
         new Controller {
@@ -119,27 +120,27 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
   describe("Caching") {
 
     it("Adds no-store for noStore strategy") {
-      get("/caching/no-store").getHeader("Cache-Control") shouldBe "no-store"
+      get("/test/caching/no-store").getHeader("Cache-Control") shouldBe "no-store"
     }
 
     it("Adds visibility and max-age headers for noRevalidate strategy") {
-      val res = get("/caching/no-revalidate")
+      val res = get("/test/caching/no-revalidate")
       res.getHeader("Cache-Control") shouldBe "public, max-age=600"
       res.getHeader("Expires") should not be null
     }
 
     it("Adds Weak ETag support") {
-      val res = get("/caching/weakEtag/sam")
+      val res = get("/test/caching/weakEtag/sam")
       res.getStatusCode shouldBe 200
       res.getHeader("Cache-Control") shouldBe "no-cache, private"
       val etag: String = res.getHeader("ETag")
       etag should startWith("W/\"")
 
-      val res2 = get(s"/caching/weakEtag/sam", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
+      val res2 = get(s"/test/caching/weakEtag/sam", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
 
       res2.getStatusCode shouldBe 304
 
-      val res3 = get(s"/caching/weakEtag/andy", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
+      val res3 = get(s"/test/caching/weakEtag/andy", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
 
       res3.getStatusCode shouldBe 200
       res3.getHeader("Content-Encoding") shouldBe "gzip"
@@ -147,17 +148,17 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
 
     it("Adds Strong ETag support") {
 
-      val res = get("/caching/etag/sam")
+      val res = get("/test/caching/etag/sam")
       res.getStatusCode shouldBe 200
       res.getHeader("Cache-Control") shouldBe "no-cache, private"
       val etag: String = res.getHeader("ETag")
       etag should not be null
 
-      val res2 = get(s"/caching/etag/sam", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
+      val res2 = get(s"/test/caching/etag/sam", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
 
       res2.getStatusCode shouldBe 304
 
-      val res3 = get(s"/caching/etag/andy", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
+      val res3 = get(s"/test/caching/etag/andy", Map("Accept-Encoding" -> Seq("gzip"), "If-None-Match" -> Seq(etag)))
 
       res3.getStatusCode shouldBe 200
       res3.getHeader("Content-Encoding") shouldBe "gzip"
@@ -167,44 +168,44 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
 
   describe("Routes") {
     it("should return 404 for not found route") {
-      get("/querystringmap?1=a&1=b&2=c&3=%2623").getResponseBody shouldBe "1->ab|2->c|3->&23"
+      get("/test/querystringmap?1=a&1=b&2=c&3=%2623").getResponseBody shouldBe "1->ab|2->c|3->&23"
     }
 
     it("should give query string map") {
-      get("/missing").getStatusCode shouldBe 404
+      get("/test/missing").getStatusCode shouldBe 404
     }
 
     it("should return headers only for HEAD") {
-      head("/missing").getStatusCode shouldBe 404
+      head("/test/missing").getStatusCode shouldBe 404
 
-      val resp: Response = head("/head")
+      val resp: Response = head("/test/head")
       resp.getStatusCode shouldBe 200
       resp.getHeader("header") shouldBe "value"
       resp.getHeader("Content-Length") shouldBe "0"
 
-      val resp2: Response = head("/future/morethanone/string")
+      val resp2: Response = head("/test/future/morethanone/string")
       resp2.getStatusCode shouldBe 200
       resp2.getHeader("Content-Length") shouldBe "6"
     }
 
     it("should return 405 for invalid method") {
-      val wrong = post("/himynameis/Sam")
+      val wrong = post("/test/himynameis/Sam")
       wrong.getStatusCode shouldBe 405
       wrong.getHeader("Allow") shouldBe "GET, HEAD"
 
-      post("/missing").getStatusCode shouldBe 404
+      post("/test/missing").getStatusCode shouldBe 404
 
-      post("/post", "body").getResponseBody shouldBe "body"
+      post("/test/post", "body").getResponseBody shouldBe "body"
     }
 
     it("HEAD should return 200, 302, 404 and 500 error codes") {
-      head("/future/morethanone/Error").getStatusCode shouldBe 500
-      head("/future/morethanone/NotFound").getStatusCode shouldBe 404
-      head("/future/morethanone/redirect").getStatusCode shouldBe 302
-      head("/future/morethanone/string").getStatusCode shouldBe 200
-      head("/future/morethanone/headers").getHeader("hi") shouldBe "there"
+      head("/test/future/morethanone/Error").getStatusCode shouldBe 500
+      head("/test/future/morethanone/NotFound").getStatusCode shouldBe 404
+      head("/test/future/morethanone/redirect").getStatusCode shouldBe 302
+      head("/test/future/morethanone/string").getStatusCode shouldBe 200
+      head("/test/future/morethanone/headers").getHeader("hi") shouldBe "there"
 
-      val cookie = head("/future/morethanone/cookies").getCookies.asScala.collectFirst {
+      val cookie = head("/test/future/morethanone/cookies").getCookies.asScala.collectFirst {
         case c if c.name() == "cookie" => c.value()
       }
 
@@ -212,7 +213,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
     }
 
     it("should return 500 for timeout") {
-      val res = get("/future/timeout")
+      val res = get("/test/future/timeout")
       res.getStatusCode shouldBe 500
       val body: String = res.getResponseBody
       body should include("java.lang.Thread.State: TIMED_WAITING")
@@ -220,32 +221,32 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
     }
 
     it("should parse path params") {
-      get("/himynameis/Sam").getResponseBody shouldBe "hi Sam"
+      get("/test/himynameis/Sam").getResponseBody shouldBe "hi Sam"
     }
 
     it("should not URL decode parsed path params") {
-      get("/himynameis/Sam%2FOwen").getResponseBody shouldBe "hi Sam%2FOwen"
+      get("/test/himynameis/Sam%2FOwen").getResponseBody shouldBe "hi Sam%2FOwen"
     }
 
     it("should parse regex params") {
-      get("/regex/year/2000").getResponseBody shouldBe "hell0 the year 2000"
+      get("/test/regex/year/2000").getResponseBody shouldBe "hell0 the year 2000"
     }
 
     it("should not URL decode parsed regex params") {
-      get("/regex/date/01%2F01%2F2000").getResponseBody shouldBe "hell0 the date 01%2F01%2F2000"
+      get("/test/regex/date/01%2F01%2F2000").getResponseBody shouldBe "hell0 the date 01%2F01%2F2000"
     }
 
     it("should be able to get and post from same uri") {
-      get("/getandpost").getResponseBody shouldBe "get"
-      post("/getandpost").getResponseBody shouldBe "post"
+      get("/test/getandpost").getResponseBody shouldBe "get"
+      post("/test/getandpost").getResponseBody shouldBe "post"
     }
 
     it("should be able to set cookies") {
-      get("/future/morethanone/cookies").getCookies.asScala.head.value() shouldBe "tasty"
+      get("/test/future/morethanone/cookies").getCookies.asScala.head.value() shouldBe "tasty"
     }
 
     it("should be able to retrieve request uri") {
-      get("/uri?foo=bar#qunx").getResponseBody shouldBe s"$host/uri?foo=bar"
+      get("/test/uri?foo=bar#qunx").getResponseBody shouldBe s"$host/test/uri?foo=bar"
     }
 
     it("should be able to use GzipHandler") {
@@ -253,9 +254,9 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
         get(s"$path", Map("Accept-Encoding" -> Seq("gzip"))).getHeader("Content-Encoding") shouldBe "gzip"
       }
 
-      shouldBeGzipped("/file")
-      shouldBeGzipped("/future/morethanone/file")
-      shouldBeGzipped("/caching/etag/andy")
+      shouldBeGzipped("/test/file")
+      shouldBeGzipped("/test/future/morethanone/file")
+      shouldBeGzipped("/test/caching/etag/andy")
     }
   }
 

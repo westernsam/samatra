@@ -31,7 +31,7 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-util" % jettyVersion % "test",
 
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
-    "org.asynchtt2.4.7pclient" % "async-http-client" % "" % "test"
+    "org.asynchttpclient" % "async-http-client" % "2.5.2" % "test"
   )
 
 lazy val `samatra-websockets` = project.in(file("samatra-websockets"))
