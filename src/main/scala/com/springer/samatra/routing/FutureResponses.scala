@@ -33,31 +33,38 @@ object FutureResponses {
 
   case class FutureHttpResp[T](fut: Future[T], timeout: Long, rest: T => HttpResp, executionContext: ExecutionContext, logThreadDumpOnTimeout: Boolean, responseCodeOnTimeout : Int = 500) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-      val state = new AtomicReference[State](Running)
+      if (req.isAsyncStarted) {
+          throw new IllegalStateException("Async already started. Have you wrapper a FutureResp inside another FutureResp?")
+      } else {
+        val state = new AtomicReference[State](Running)
+        val async: AsyncContext = req.startAsync(req, resp)
 
-      val async: AsyncContext = req.startAsync(req, resp)
+        async.setTimeout(timeout)
+        async.addListener(new TimingOutListener(state, timeout, logThreadDumpOnTimeout, responseCodeOnTimeout)) //Does not stop the future running. You must do this
 
-      async.setTimeout(timeout)
-      async.addListener(new TimingOutListener(state, timeout, logThreadDumpOnTimeout, responseCodeOnTimeout)) //Does not stop the future running. You must do this
-
-      fut.onComplete { t =>
-        if (state.getAndSet(Rendering) == Running) {
-          val asyncResponse: HttpServletResponse = async.getResponse.asInstanceOf[HttpServletResponse]
-          val asyncRequest: HttpServletRequest = async.getRequest.asInstanceOf[HttpServletRequest]
-          try {
-            rest(t.get).process(asyncRequest, asyncResponse)
-          } catch {
-            case t: Throwable =>
-              if (!asyncResponse.isCommitted) {
-                req.setAttribute("javax.servlet.error.exception", t)
-                asyncResponse.sendError(500)
+        fut.onComplete { t =>
+          if (state.getAndSet(Rendering) == Running) {
+            val asyncResponse: HttpServletResponse = async.getResponse.asInstanceOf[HttpServletResponse]
+            val asyncRequest: HttpServletRequest = async.getRequest.asInstanceOf[HttpServletRequest]
+            try {
+              rest(t.get).process(asyncRequest, asyncResponse)
+            } catch {
+              case t: Throwable =>
+                if (!asyncResponse.isCommitted) {
+                  req.setAttribute("javax.servlet.error.exception", t)
+                  asyncResponse.sendError(500)
+                }
+            } finally {
+              Try {
+                asyncResponse.getOutputStream.close()
               }
-          } finally {
-            Try { asyncResponse.getOutputStream.close() }
-            Try { async.complete() }
+              Try {
+                async.complete()
+              }
+            }
           }
-        }
-      }(executionContext)
+        }(executionContext)
+      }
     }
   }
 
