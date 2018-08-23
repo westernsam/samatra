@@ -97,9 +97,9 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
               }
               case "headers" => WithHeaders("hi" -> "there")("body")
               case "cookies" =>
-                WithCookies(Seq(AddCookie("cookie", "tasty")))("body")
+                WithCookies(AddCookie("cookie", "tasty"))("body")
               case "securedcookies" =>
-                WithCookies(Seq(AddCookie("cookie", "tasty", httpOnly = true)))("body")
+                WithCookies(AddCookie("cookie", "tasty", httpOnly = true))("body")
             }
           }
         }

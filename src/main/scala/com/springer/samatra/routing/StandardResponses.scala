@@ -40,16 +40,16 @@ object StandardResponses {
   }
 
   sealed abstract class CookieAction
-  case class AddCookie(name: String, value: String, maxAge: Option[Int] = None, domain: String = ".springer.com", path: String = "/", httpOnly: Boolean = false, secure: Boolean = false) extends CookieAction
+  case class AddCookie(name: String, value: String, maxAge: Option[Int] = None, domain: Option[String] = None, path: Option[String] = None, httpOnly: Boolean = false, secure: Boolean = false) extends CookieAction
   case class RemoveCookie(name: String) extends CookieAction
 
-  case class WithCookies(cookies: Seq[CookieAction])(val rest: HttpResp) extends HttpResp {
+  case class WithCookies(cookies: CookieAction*)(val rest: HttpResp) extends HttpResp {
     override def process(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
       cookies.foreach {
         case add: AddCookie =>
           val cookie = new Cookie(add.name, add.value)
-          cookie.setPath(add.path)
-          cookie.setDomain(add.domain)
+          add.path.foreach(p => cookie.setPath(p))
+          add.domain.foreach(d => cookie.setDomain(d))
           cookie.setHttpOnly(add.httpOnly)
           cookie.setSecure(add.secure)
           add.maxAge.foreach(cookie.setMaxAge)
