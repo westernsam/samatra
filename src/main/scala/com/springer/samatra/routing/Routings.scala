@@ -40,7 +40,7 @@ object Routings {
   }
 
   trait Routes {
-    val routes: Seq[Route]
+    def routes: Seq[Route]
 
     def matching(req: HttpServletRequest, resp: HttpServletResponse): Either[Seq[Route], Route] = {
       val matchingRoutes: Seq[Route] = routes.filter(_.matches(Request(req)).isDefined)
@@ -53,7 +53,7 @@ object Routings {
   }
 
   class AggregateRoutes(val controllers: Routes*) extends Routes {
-    override val routes: Seq[Route] = controllers.flatMap(_.routes)
+    override def routes: Seq[Route] = controllers.flatMap(_.routes)
   }
 
   abstract class Controller extends Routes {
