@@ -29,7 +29,6 @@ libraryDependencies ++=
     "org.eclipse.jetty" % "jetty-servlet" % jettyVersion % "test",
     "org.eclipse.jetty" % "jetty-servlets" % jettyVersion % "test",
     "org.eclipse.jetty" % "jetty-util" % jettyVersion % "test",
-
     "org.scalatest" %% "scalatest" % "3.0.5" % "test",
     "org.asynchttpclient" % "async-http-client" % "2.5.2" % "test"
   )
