@@ -45,7 +45,7 @@ object FutureResponses {
         fut.onComplete { t =>
           if (state.getAndSet(Rendering) == Running) {
             val asyncResponse: HttpServletResponse = async.getResponse.asInstanceOf[HttpServletResponse]
-            val asyncRequest: HttpServletRequest = async.getRequest.asInstanceOf[HttpServletRequest]
+            val asyncRequest: HttpServletRequest = req
             try {
               rest(t.get).process(asyncRequest, asyncResponse)
             } catch {
