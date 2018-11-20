@@ -24,7 +24,7 @@ object WsRoutings {
 
   class SessionBackedWSSend(val sess: Session) extends WSSend {
     override def id: String = sess.getId
-    override def sendBinary(msg: Array[Byte]): Unit = sess.getBasicRemote.sendBinary(ByteBuffer.wrap(msg))
+    override def sendBinary(msg: Array[Byte]): Unit = sendBinary(Future.successful(msg))(ExecutionContext.global)
     override def sendBinary(msg: Future[Array[Byte]])(implicit ex: ExecutionContext): Future[Unit] = {
       msg.flatMap { bytes =>
         val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendBinary(ByteBuffer.wrap(bytes))
@@ -36,7 +36,9 @@ object WsRoutings {
       }
     }
     override def close(code: Int, msg: String): Unit = sess.close(new CloseReason(CloseReason.CloseCodes.getCloseCode(code), msg))
-    override def send(msg: String): Unit = sess.getBasicRemote.sendText(msg)
+    override def ping(bytes: Array[Byte]): Unit = sess.getAsyncRemote.sendPing(ByteBuffer.wrap(bytes))
+    override def pong(bytes: Array[Byte]): Unit = sess.getAsyncRemote.sendPong(ByteBuffer.wrap(bytes))
+    override def send(msg: String): Unit = send(Future.successful(msg))(ExecutionContext.global)
     override def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit] = {
       msg.flatMap { str =>
         val value: util.concurrent.Future[Void] = sess.getAsyncRemote.sendText(str)
@@ -147,6 +149,8 @@ object WsRoutings {
   }
 
   trait WSSend {
+    def ping(bytes: Array[Byte]): Unit
+    def pong(bytes: Array[Byte]): Unit
     def send(msg: String): Unit
     def send(msg: Future[String])(implicit ex: ExecutionContext): Future[Unit]
     def sendBinary(msg: Array[Byte]): Unit
