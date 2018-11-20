@@ -84,6 +84,13 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
     addServlet(new ServletHolder(
       Routes(new Controller {
 
+        get("/relative") { req =>
+          Future {
+            Thread.sleep(100)
+            req.relativePath
+          }
+        }
+
         //with implicits
         get("/morethanone/:type") { req =>
           Future[HttpResp] {
@@ -169,6 +176,10 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
   describe("Routes") {
     it("should return 404 for not found route") {
       get("/test/querystringmap?1=a&1=b&2=c&3=%2623").getResponseBody shouldBe "1->ab|2->c|3->&23"
+    }
+
+    it("has correct relative path after async") {
+      get("/test/future/relative").getResponseBody shouldBe "/relative"
     }
 
     it("should give query string map") {

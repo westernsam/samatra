@@ -37,14 +37,27 @@ case class Request(underlying: HttpServletRequest, params: collection.Map[String
   def captured(name: String): String = params(name)
   def captured(i: Int): String = captured(i.toString)
 
-  def path: String = underlying.getRequestURI
+  def path: String = {
+    val asyncRequestUri = underlying.getAttribute("javax.servlet.async.request_uri")
+    if (asyncRequestUri != null) asyncRequestUri.toString else underlying.getRequestURI
+  }
 
   //relative to context and servlet path
   def relativePath: String =
-    if (path.indexOf(underlying.getContextPath + underlying.getServletPath) > -1)
-      path.substring(underlying.getContextPath.length + underlying.getServletPath.length)
+    if (path.indexOf(contextPath + servletPath) > -1)
+      path.substring(contextPath.length + servletPath.length)
     else
       path
+
+  private def servletPath: String = {
+    val asyncServletPath = underlying.getAttribute("javax.servlet.async.servlet_path")
+    if (asyncServletPath != null) asyncServletPath.toString else underlying.getServletPath
+  }
+
+  private def contextPath : String= {
+    val asyncContextPath = underlying.getAttribute("javax.servlet.async.context_path")
+    if (asyncContextPath != null) asyncContextPath.toString else underlying.getContextPath
+  }
 
   def queryStringParamValue(name: String): String = underlying.getParameter(name)
 
