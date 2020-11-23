@@ -227,8 +227,7 @@ class EndToEndTest extends FunSpec with BeforeAndAfterAll {
       val res = get("/test/future/timeout")
       res.getStatusCode shouldBe 500
       val body: String = res.getResponseBody
-      body should include("java.lang.Thread.State: TIMED_WAITING")
-      body should include("at java.lang.Thread.sleep(Native Method)")
+      body should include("java.lang.Thread.State: WAITING")
     }
 
     it("should parse path params") {
