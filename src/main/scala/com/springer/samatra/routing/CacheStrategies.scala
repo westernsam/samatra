@@ -8,7 +8,6 @@ import java.time.ZonedDateTime._
 import java.util.ResourceBundle
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse, HttpServletResponseWrapper}
 import javax.servlet.{ServletOutputStream, WriteListener}
-import javax.xml.bind.DatatypeConverter
 
 import com.springer.samatra.routing.Routings.HttpResp
 import com.springer.samatra.routing.StandardResponses.WithHeaders
@@ -147,7 +146,19 @@ object CacheStrategies {
     private val out: ByteArrayOutputStream = new ByteArrayOutputStream()
     private val md = MessageDigest.getInstance("MD5")
 
-    def hexOfmd5(): String = DatatypeConverter.printHexBinary(md.digest(body()))
+    def hexOfmd5(): String = {
+      def getHex(raw: Array[Byte]): String = {
+        if (raw == null) return null
+        val hex = new StringBuilder(2 * raw.length)
+        for (b <- raw) {
+          hex.append(HEXES.charAt((b & 0xF0) >> 4)).append(HEXES.charAt(b & 0x0F))
+        }
+        hex.toString
+      }
+      getHex(md.digest(body()))
+    }
+
+    private val HEXES = "0123456789ABCDEF"
 
     def body(): Array[Byte] = out.toByteArray
 
