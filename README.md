@@ -1,10 +1,10 @@
-Samatra [![Build Status](https://travis-ci.org/springernature/samatra.svg?branch=master)](https://travis-ci.org/springernature/samatra) [![](https://jitpack.io/v/springernature/samatra.svg)](https://jitpack.io/#springernature/samatra)
+Samatra [![](https://jitpack.io/v/westernsam/samatra.svg)](https://jitpack.io/#westernsam/samatra)
 =======
 
 ## Decription
 Minimal web framework in the spirit of [Scalatra](http://www.scalatra.org]). There's not a lot to it - you could write it yourself.
 
-[Samatra-extras](https://github.com/springernature/samatra-extras) provides more features but has more dependencies. Documentation [here](https://github.com/springernature/samatra-extras/wiki)
+[Samatra-extras](https://github.com/westernsam/samatra-extras) provides more features but has more dependencies. Documentation [here](https://github.com/westernsam/samatra-extras/wiki)
 
 ## Supported platforms
 - Scala 2.12
@@ -17,7 +17,7 @@ resolvers += "jitpack" at "https://jitpack.io",
 libraryDependencies += "com.github.springernature" %% "samatra" % "v1.5.0"	
 ```
 
-You may also be interested in [samatra-extras](https://github.com/springernature/samatra-extras) (which adds some dependencies but has more batteries included).
+You may also be interested in [samatra-extras](https://github.com/westernsam/samatra-extras) (which adds some dependencies but has more batteries included).
  
 ## Licensing
 The MIT License (MIT)  http://opensource.org/licenses/MIT
