@@ -70,21 +70,20 @@ object FutureResponses {
 
   class TimingOutListener(state: AtomicReference[State], timeout: Long, logThreadDumpOnTimeout: Boolean, responseCodeOnTimeout : Int) extends AsyncListener {
     override def onError(event: AsyncEvent): Unit = ()
+
     override def onComplete(event: AsyncEvent): Unit = ()
+
     override def onStartAsync(event: AsyncEvent): Unit = ()
+
     override def onTimeout(event: AsyncEvent): Unit =
       if (state.getAndSet(Timedout) == Running) {
         val response: HttpServletResponse = event.getAsyncContext.getResponse.asInstanceOf[HttpServletResponse]
-        try {
-          if (!response.isCommitted) {
-            event.getSuppliedRequest.setAttribute("javax.servlet.error.exception",
-              new TimeoutException(s"Request exceeded timeout of $timeout\n${if (logThreadDumpOnTimeout) ThreadDumps.generateThreadDump() else ""}"))
-            response.sendError(responseCodeOnTimeout)
-          }
-        } finally {
-//          Try { response.getOutputStream.close() }
-          Try { event.getAsyncContext.complete()}
+        if (!response.isCommitted) {
+          event.getSuppliedRequest.setAttribute("javax.servlet.error.exception",
+            new TimeoutException(s"Request exceeded timeout of $timeout\n${if (logThreadDumpOnTimeout) ThreadDumps.generateThreadDump() else ""}"))
+          response.sendError(responseCodeOnTimeout)
         }
+        Try(event.getAsyncContext.complete())
       }
   }
 
@@ -92,7 +91,7 @@ object FutureResponses {
     def generateThreadDump(): String = {
       val dump = new StringBuilder()
       val threadMXBean = ManagementFactory.getThreadMXBean
-      threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds, 100).foreach { threadInfo =>
+      threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds, 10).foreach { threadInfo =>
         dump.append('"')
         dump.append(threadInfo.getThreadName)
         dump.append("\" ")

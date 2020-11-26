@@ -1,6 +1,5 @@
 package com.springer.samatra.routing
 
-import java.nio.file.Paths
 import com.springer.samatra.routing.CacheStrategies._
 import com.springer.samatra.routing.FutureResponses.Implicits.fromFuture
 import com.springer.samatra.routing.FutureResponses._
@@ -12,10 +11,11 @@ import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig
 import org.eclipse.jetty.server.handler.gzip.GzipHandler
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers._
-import org.scalatest.BeforeAndAfterAll
 
+import java.nio.file.Paths
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
@@ -97,7 +97,7 @@ class EndToEndTest extends AnyFunSpec with BeforeAndAfterAll {
             req.captured("type") match {
               case "redirect" => Redirect("/getandpost")
               case "string" => "String"
-              case "Error" => Halt(500)
+              case "Error" => Halt(500, Some(new RuntimeException("error")))
               case "NotFound" => Halt(404)
               case "file" => WithHeaders("Content-Type" -> "application/xml") {
                 Paths.get("build.sbt")
@@ -225,8 +225,8 @@ class EndToEndTest extends AnyFunSpec with BeforeAndAfterAll {
     it("should return 500 for timeout") {
       val res = get("/test/future/timeout")
       res.getStatusCode shouldBe 500
-//      val body: String = res.getResponseBody
-//      body should include("java.lang.Thread.State: WAITING")
+      val body: String = res.getResponseBody
+      body should include("java.lang.Thread.State: WAITING")
     }
 
     it("should parse path params") {
