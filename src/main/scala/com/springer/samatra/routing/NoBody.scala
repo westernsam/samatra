@@ -26,7 +26,7 @@ case class NoBody(body: (Request) => HttpResp) extends (Request => HttpResp) {
     private var didSetContentLength: Boolean = false
     private var usingOutputStream: Boolean = false
     noBody = new NoBodyOutputStream(this)
-    def setContentLength() {
+    def setContentLength(): Unit = {
       if (!didSetContentLength) {
         if (writer != null) {
           writer.flush()
@@ -35,31 +35,31 @@ case class NoBody(body: (Request) => HttpResp) extends (Request => HttpResp) {
       }
     }
 
-    override def setContentLength(len: Int) {
+    override def setContentLength(len: Int): Unit = {
       super.setContentLength(len)
       didSetContentLength = true
     }
-    override def setContentLengthLong(len: Long) {
+    override def setContentLengthLong(len: Long): Unit = {
       super.setContentLengthLong(len)
       didSetContentLength = true
     }
-    override def setHeader(name: String, value: String) {
+    override def setHeader(name: String, value: String): Unit = {
       super.setHeader(name, value)
       checkHeader(name)
     }
-    override def addHeader(name: String, value: String) {
+    override def addHeader(name: String, value: String): Unit = {
       super.addHeader(name, value)
       checkHeader(name)
     }
-    override def setIntHeader(name: String, value: Int) {
+    override def setIntHeader(name: String, value: Int): Unit = {
       super.setIntHeader(name, value)
       checkHeader(name)
     }
-    override def addIntHeader(name: String, value: Int) {
+    override def addIntHeader(name: String, value: Int): Unit = {
       super.addIntHeader(name, value)
       checkHeader(name)
     }
-    private def checkHeader(name: String) {
+    private def checkHeader(name: String): Unit = {
       if ("content-length".equalsIgnoreCase(name)) {
         didSetContentLength = true
       }

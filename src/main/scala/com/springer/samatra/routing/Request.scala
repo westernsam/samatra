@@ -4,10 +4,8 @@ import java.io.InputStream
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.servlet.http._
-
-import scala.collection.JavaConverters
-import scala.collection.JavaConverters._
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 trait RequestTrait {
   def cookie(cookieName: String): Option[String]
@@ -65,7 +63,7 @@ case class Request(underlying: HttpServletRequest, params: collection.Map[String
 
   def header(name: String): Option[String] = Option(underlying.getHeader(name))
 
-  def headers(name: String): Seq[String] = JavaConverters.iterableAsScalaIterableConverter(Collections.list(underlying.getHeaders(name))).asScala.toList
+  def headers(name: String): Seq[String] = Collections.list(underlying.getHeaders(name)).asScala.toList
 
   def attribute(name: String): Option[Any] = Option(underlying.getAttribute(name))
   def setAttribute(name: String, value: Any): Unit = underlying.setAttribute(name, value)

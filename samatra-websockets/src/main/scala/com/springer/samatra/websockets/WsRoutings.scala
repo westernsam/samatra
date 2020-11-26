@@ -6,9 +6,9 @@ import java.security.Principal
 import java.util
 import javax.websocket._
 import javax.websocket.server.{HandshakeRequest, ServerContainer, ServerEndpoint, ServerEndpointConfig}
-
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future, blocking}
 
 object WsRoutings {
@@ -19,7 +19,7 @@ object WsRoutings {
   }
 
   class WsRoutes {
-    val routes: mutable.Buffer[WsRoute] = mutable.Buffer[WsRoute]()
+    val routes: ListBuffer[WsRoute] = ListBuffer()
   }
 
   class SessionBackedWSSend(val sess: Session) extends WSSend {
@@ -73,14 +73,19 @@ object WsRoutings {
     override def queryStringParamValues(name: String): Set[String] = sess.getRequestParameterMap.asScala.get(name).map(_.asScala.toSet).getOrElse(Set.empty)
     override def cookie(cookieName: String): Option[String] = cookies.find(_.getName == cookieName).map(_.getValue)
 
-    override def cookies: Seq[HttpCookie] = HttpCookie.parse(header("cookie").orNull).asScala
+    override def cookies: Seq[HttpCookie] = {
+      val cookies1 = HttpCookie.parse(header("cookie").orNull)
+      cookies1.asScala.toSeq
+    }
 
     override def header(name: String): Option[String] = headers(name.toLowerCase).headOption
-    override def headers(name: String): Seq[String] = upgradeHeaders.getOrElse(name.toLowerCase, Seq.empty)
+    override def headers(name: String): Seq[String] = upgradeHeaders.getOrElse(name.toLowerCase, Seq.empty).toSeq
 
     override def user: Option[Principal] = Option(sess.getUserProperties.get("user")).map(_.asInstanceOf[Principal])
 
-    private lazy val upgradeHeaders: Map[String, Seq[String]] = sess.getUserProperties.get("headers").asInstanceOf[Map[String, Seq[String]]]
+    private lazy val upgradeHeaders: Map[String, ListBuffer[String]] = {
+      sess.getUserProperties.get("headers").asInstanceOf[Map[String, ListBuffer[String]]]
+    }
   }
 
   @ServerEndpoint("/*")

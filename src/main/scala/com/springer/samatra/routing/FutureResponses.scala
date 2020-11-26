@@ -51,7 +51,7 @@ object FutureResponses {
             } catch {
               case t: Throwable =>
                 if (!asyncResponse.isCommitted) {
-                  req.setAttribute("javax.servlet.error.exception", t)
+                  asyncRequest.setAttribute("javax.servlet.error.exception", t)
                   asyncResponse.sendError(500)
                 }
             } finally {
@@ -82,7 +82,7 @@ object FutureResponses {
             response.sendError(responseCodeOnTimeout)
           }
         } finally {
-          Try { response.getOutputStream.close() }
+//          Try { response.getOutputStream.close() }
           Try { event.getAsyncContext.complete()}
         }
       }

@@ -1,7 +1,5 @@
 package com.springer.samatra.websockets
 
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-
 import com.springer.samatra.websockets.WsRoutings.{WS, WSController, WriteOnly, WsRoutes}
 import io.netty.handler.codec.http.cookie.DefaultCookie
 import org.asynchttpclient.netty.ws.NettyWebSocket
@@ -9,11 +7,14 @@ import org.asynchttpclient.ws.{WebSocket, WebSocketListener, WebSocketUpgradeHan
 import org.asynchttpclient.{DefaultAsyncHttpClient, DefaultAsyncHttpClientConfig}
 import org.eclipse.jetty.server.{Connector, Server, ServerConnector}
 import org.eclipse.jetty.servlet.ServletContextHandler
-import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer.configureContext
-import org.scalatest.Matchers._
-import org.scalatest.{BeforeAndAfterAll, FunSpec}
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer.initialize
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers._
 
-class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
+import java.util.concurrent.{CountDownLatch, TimeUnit}
+
+class WebSocketEndToEndTest extends AnyFunSpec with BeforeAndAfterAll {
 
   private val server = new Server() {
     addConnector(new ServerConnector(this) {
@@ -25,11 +26,9 @@ class WebSocketEndToEndTest extends FunSpec with BeforeAndAfterAll {
     sc =>
     setServer(server)
 
-    WsRoutes(configureContext(sc), "/ws/*", new WSController {
+    WsRoutes(initialize(sc), "/ws/*", new WSController {
       mount("/echo") { ws =>
-        new WS {
-          override def onMsg(msg: String): Unit = ws.send(s"$msg")
-        }
+        (msg: String) => ws.send(s"$msg")
       }
       mount("/hello/:name") { ws =>
         new WriteOnly {

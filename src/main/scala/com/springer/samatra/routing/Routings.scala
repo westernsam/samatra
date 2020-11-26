@@ -1,9 +1,7 @@
 package com.springer.samatra.routing
 
 import javax.servlet.http._
-
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 import scala.util.matching.Regex
 
 object Routings {
@@ -57,51 +55,39 @@ object Routings {
   }
 
   abstract class Controller extends Routes {
-    val routes: ArrayBuffer[Route] = new ArrayBuffer[Route]()
+    private val routesBuffer: ListBuffer[Route] = new ListBuffer[Route]()
+
+    override def routes: Seq[Route] = routesBuffer.toSeq
 
     protected def get(path: String)(body: Request => HttpResp): Unit = {
       getWithoutHead(path)(body)
-      routes.append(PathParamsRoute(HEAD, path, NoBody(body)))
+      routesBuffer.append(PathParamsRoute(HEAD, path, NoBody(body)))
     }
 
     protected def get(pattern: Regex)(body: Request => HttpResp): Unit = {
       getWithoutHead(pattern)(body)
-      routes.append(RegexRoute(HEAD, pattern, NoBody(body)))
+      routesBuffer.append(RegexRoute(HEAD, pattern, NoBody(body)))
     }
 
     //noinspection AccessorLikeMethodIsUnit
-    protected def getWithoutHead(path: String)(body: Request => HttpResp): Unit = routes.append(PathParamsRoute(GET, path, body))
+    protected def getWithoutHead(path: String)(body: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(GET, path, body))
 
     //noinspection AccessorLikeMethodIsUnit
-    protected def getWithoutHead(pattern: Regex)(body: Request => HttpResp): Unit = routes.append(RegexRoute(GET, pattern, body))
-
-    protected def post(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(POST, path, fromRequest))
-
-    protected def post(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(POST, pattern, fromRequest))
-
-    protected def put(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(PUT, path, fromRequest))
-
-    protected def put(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(PUT, pattern, fromRequest))
-
-    protected def head(path: String)(fromRequest: Request => HeadersOnly): Unit = routes.append(PathParamsRoute(HEAD, path, fromRequest))
-
-    protected def head(pattern: Regex)(fromRequest: Request => HeadersOnly): Unit = routes.append(RegexRoute(HEAD, pattern, fromRequest))
-
-    protected def delete(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(DELETE, path, fromRequest))
-
-    protected def delete(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(DELETE, pattern, fromRequest))
-
-    protected def options(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(OPTIONS, path, fromRequest))
-
-    protected def options(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(OPTIONS, pattern, fromRequest))
-
-    protected def trace(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(TRACE, path, fromRequest))
-
-    protected def trace(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(TRACE, pattern, fromRequest))
-
-    protected def connect(path: String)(fromRequest: Request => HttpResp): Unit = routes.append(PathParamsRoute(CONNECT, path, fromRequest))
-
-    protected def connect(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routes.append(RegexRoute(CONNECT, pattern, fromRequest))
+    protected def getWithoutHead(pattern: Regex)(body: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(GET, pattern, body))
+    protected def post(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(POST, path, fromRequest))
+    protected def post(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(POST, pattern, fromRequest))
+    protected def put(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(PUT, path, fromRequest))
+    protected def put(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(PUT, pattern, fromRequest))
+    protected def head(path: String)(fromRequest: Request => HeadersOnly): Unit = routesBuffer.append(PathParamsRoute(HEAD, path, fromRequest))
+    protected def head(pattern: Regex)(fromRequest: Request => HeadersOnly): Unit = routesBuffer.append(RegexRoute(HEAD, pattern, fromRequest))
+    protected def delete(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(DELETE, path, fromRequest))
+    protected def delete(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(DELETE, pattern, fromRequest))
+    protected def options(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(OPTIONS, path, fromRequest))
+    protected def options(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(OPTIONS, pattern, fromRequest))
+    protected def trace(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(TRACE, path, fromRequest))
+    protected def trace(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(TRACE, pattern, fromRequest))
+    protected def connect(path: String)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(PathParamsRoute(CONNECT, path, fromRequest))
+    protected def connect(pattern: Regex)(fromRequest: Request => HttpResp): Unit = routesBuffer.append(RegexRoute(CONNECT, pattern, fromRequest))
   }
 
   class HeadersOnly(val headers: (String, String)*) extends HttpResp {
@@ -130,7 +116,7 @@ object Routings {
     override def write(req: Request, resp: HttpServletResponse): Unit = routes.toList match {
       case Nil => resp.sendError(404)
       case _ =>
-        resp.setHeader("Allow", Set(routes.map(_.method): _*).mkString(", "))
+        resp.setHeader("Allow", routes.map(_.method).toSet.mkString(", "))
         resp.sendError(405)
     }
   }
@@ -155,20 +141,15 @@ object Routings {
       val actual: Array[String] = req.relativePath.split("/")
       val pattern: Array[String] = path.split("/")
 
-      if (actual.length != pattern.length)
-        None
-      else {
-        val res: mutable.Map[String, String] = mutable.Map()
-
-        for ((left, right) <- pattern.zip(actual)) {
-          if (!left.equals(right))
-            if (left.startsWith(":"))
-              res.put(left.substring(1), right)
-            else
-              return None
+      if (actual.length != pattern.length) None
+      else pattern.zip(actual).foldLeft[Option[Map[String, String]]](Some(Map.empty)) {
+        case (r, (left, right)) => r match {
+          case None => None
+          case Some(map) =>
+            if (left == right) r
+            else if (left.startsWith(":")) Some(map + (left.substring(1) -> right))
+            else None
         }
-
-        Some(res)
       }
     }
 
