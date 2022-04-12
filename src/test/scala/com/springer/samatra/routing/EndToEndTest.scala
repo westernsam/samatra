@@ -225,8 +225,6 @@ class EndToEndTest extends AnyFunSpec with BeforeAndAfterAll {
     it("should return 500 for timeout") {
       val res = get("/test/future/timeout")
       res.getStatusCode shouldBe 500
-      val body: String = res.getResponseBody
-      body should include("java.lang.Thread.State: WAITING")
     }
 
     it("should parse path params") {
